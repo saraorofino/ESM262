@@ -10,8 +10,8 @@ output: html_document
 
 ##Why this Course
 
-I'm completing the Environmental Data Science focus and this is one of the required class. I'm interested in learning how to write my own R packages and ways to make data analysis in R more advanced.   
+I'm completing the Environmental Data Science focus and this is one of the required class. I'm interested in learning how to write my own R packages and become more advanced with functions to accomplish repetitive data analysis tasks.   
 
 ##Data Science Background
 
-I started learning how to use R/RStudio and Git/GitHub last year when I started at Bren. Since then I've taken both of Allison's data courses and started working on a data-based research project with Mark Buntaine. In this project I have brought together about 15 data sets, wrangled them into one analysis data frame, and completed a regression analysis. My group project is also heavily based in R and with my teammates I created a model comprised of a few functions that have time interval loops within them. I have also taken both of Frew's GIS classes and we did a bit of command line coding with git as well as publishing maps to github.
+I started learning how to use R/RStudio and Git/GitHub last year when I started at Bren. I've taken both of Allison's data courses and both of Frew's GIS classes where we did a bit of command line coding with git as well as publishing GIS maps to GitHub. Last spring I started working on a data analysis research project with Mark Buntaine. In this project I have brought together about 15 data sets, wrangled them into one set of analysis data, and completed a regression analysis. My group project is also heavily based in R. With my teammates, I combined a biological fisheries model with a management model we created to simulate decision making on various time intervals. These models were contained within a larger function and had several sets of if statements and time dependent loops. 
