@@ -6,7 +6,7 @@
 
 energy_mixes <- function(energy){
   n <- 23000 # define the amount of energy in TWh needed to meet global energy demand
-  probs = c(0.30, 0.50, 0.50, 0.10, 0.15, 0.20, 0.20) # probability for each type - must be the same length/in the same order as 'energy'
+  probs = c(0.30, 0.50, 0.50, 0.25, 0.15, 0.45, 0.20) # probability for each type - must be the same length/in the same order as 'energy'
   out <- sample(energy, size = n, replace = TRUE, prob = probs) # randomly draw a mix of energy to meet global demand
   return(as.data.frame(out) %>% 
            rename(energy_type = "out") %>%
