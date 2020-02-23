@@ -30,8 +30,8 @@ This function was designed to calculate a theoretical equal share of FEMA fundin
 
 Generate data the function using two different methods  
 
-*Method 1*  
-Load a data file    
+**Method 1**  
+*Load a data file*      
 
 
 ```{r data-method-1, warning=FALSE, message=FALSE}
@@ -47,13 +47,13 @@ hmgp_funding <- colnames(fema[31:43]) #colnames for hazard grant mitigation prog
 
 
 
-*Method 2*  
-Create the input data  
+**Method 2**  
+*Create the input data*  
 
 Simulate 5 disasters in the 78 municipalities - create a data frame with the following information:  
-  - population
-  - inclusion (binary 0/1)
-  - funding (2 types)
+  - population  
+  - inclusion (binary 0/1)  
+  - funding (2 types)  
 
 ```{r data-method-2, warning=FALSE, message=FALSE}
 #Start with any empty df with 78 rows for the different municipalities and 16 columns:
@@ -98,16 +98,18 @@ funding_2 <- colnames(method2[12:16])
 source("equal_share.R")
 
 # Method 1:
-es_method1 <- equal_share(disasters = disaster_numbers, fund1 = pa_funding, fund2 = hmgp_funding, input_df = fema)
+es_method1 <- equal_share(disasters = disaster_numbers, fund1 = pa_funding,
+                          fund2 = hmgp_funding, input_df = fema)
 
 # Method 2:
-es_method2 <- equal_share(disasters = dist_nums, fund1 = funding_1, fund2 = funding_2, input_df = method2)
+es_method2 <- equal_share(disasters = dist_nums, fund1 = funding_1,
+                          fund2 = funding_2, input_df = method2)
 ```
 
 
 ##Graphs
 
-Graphing the results from the first method using the actual funding data  
+Graph of results (using method 1)      
 
 ```{r results-graph, echo=FALSE}
 # Add disaster numbers for graphing:
@@ -128,7 +130,7 @@ results_graph <- ggplot(graph_df, aes(x = as.factor(disaster), y = equal_share_d
 results_graph
 ```
 
-The graph above shows the theoretical per capita equal share of FEMA funding for all federally declared disasters in Puerto Rico since 2001. The equal share calculation is based on the number of municipalities included in the declaration and sums all the FEMA funding recieved after the disaster split by the total population of the included municipalities.Most of the disasters have a fairly low (below \$25) per capita equal share. On the two extremes, disaster 4040 (Tropical Storm Maria) had a per capita equal share of less than \$1 and disaster 4339 (Hurricane Maria) had a per capita equal share of nearly \$140. Tropical Storm Maria quickly progressed to a severe Category 5 hurricane, for which a separate federally declared disaster was made. This could explain why the overall funding, and consequently the per capita equal share, for Tropical Storm Maria was so low.    
+The graph above shows the theoretical per capita equal share of FEMA funding for all federally declared disasters in Puerto Rico between 2001 and 2018. The equal share calculation is based on the number of municipalities included in the declaration and sums all the FEMA funding recieved after the disaster split by the total population of the included municipalities. Most of the disasters have a fairly low (below \$25) per capita equal share. On the two extremes, disaster 4040 (Tropical Storm Maria) had a per capita equal share of less than \$1 and disaster 4339 (Hurricane Maria) had a per capita equal share of nearly \$140. Tropical Storm Maria quickly progressed to a severe Category 5 hurricane for which a separate federal disaster declaration was made. Damages from Tropical Storm Maria were most likely made worse after Hurricane Maria and municipalities probably applied for funding to help with those damages after the hurricane. This may explain why the overall funding, and consequently the per capita equal share, for Tropical Storm Maria was so low.    
 
-The project for which this function has been created calculates the damages from Hurricane Maria and the time to recover different proportions of economic activity. An actual share calculation shows how much per capita funding each municipality recieved after each disaster which can be compared to the theoretical equal share. For Hurricane Maria, these numbers are also compared to monetary damages within each municipality to look for patterns in FEMA funding allocation.   
+The project for which this function has been created calculates the damages from Hurricane Maria and the time to recover different proportions of economic activity. An actual share calculation shows how much per capita funding each municipality recieved after each disaster which can be compared to the theoretical equal share. For Hurricane Maria, these numbers are also compared to monetary damages within each municipality to look for patterns in FEMA funding allocation and to explore if damages or funding can explain the differences in recovery time across municipalities.     
 
