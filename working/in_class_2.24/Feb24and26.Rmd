@@ -1,0 +1,766 @@
+---
+title: 'Using functions with Data'
+author: "Naomi Tague"
+date: "January, 2020"
+output:
+  slidy_presentation:
+   highlight: pygments
+  html_document: default
+  pdf_document: default
+  ioslides_presentation:
+    highlight: pygments
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo =TRUE)
+knitr::opts_chunk$set(error=TRUE)
+knitr::opts_knit$set(root.dir = '/Users/naomitague/CoursesLocal/ESM262n/docs/dataf2')
+library(tidyverse)
+
+```
+
+
+
+# Random Numbers as Inputs
+
+* sample from distributions (normal, uniform, poisson), which distribution depends on the model
+* R has many tools for generating samples from distributions with known parameters (such as mean, standard deviation, or min/max)
+  *  generating rainfall for a hydrologic model given know mean and variance of rainfall
+  
+* R also has tools for picking samples from collections 
+  * generating fish catches based on populations for an economic model
+  
+ 
+## Steps for running your model over multiple inputs
+
+1. design a data structure to store results: sometimes this is automatic but not always
+2. generate the input data
+3. apply to the model
+
+
+
+
+# Code
+
+```{r powerexample}
+
+#' Power Required by Speed
+#'
+#' This function determines the power required to keep a vehicle moving at 
+#' a given speed
+#' @param cdrag coefficient due to drag default=0.3 
+#' @param crolling coefficient due to rolling/friction default=0.015
+#' @param v vehicle speed (m/s)
+#' @param m vehicle mass (kg)
+#' @param A area of front of vehicle (m2)
+#' @param g acceleration due to gravity (m/s) default=9.8
+#' @param pair (kg/m3) default =1.2
+#' @return power (W)
+
+autopower = function(V, m, A, cdrag=0.3, crolling=0.015,pair=1.2,g=9.8) {
+  P = crolling*m*g*V + 1/2*A*pair*cdrag*V**3
+  return(P)
+}
+
+```
+
+
+
+# Sampling from Collections to Generate Data
+
+Lets **scale** up from a single car to a group of cars on a highway
+and use our **autopower** function to estimate a distribution of power 
+
+What might vary?
+
+# Our highway
+
+3 car types 
+
+Imagine with have 3 different car types - and we know how often each occurs:
+
+* car A  mass 31000 kg, area 25 m^2^
+
+* car B mass 45000 kg, area 30 m^2^
+
+* car C mass 38000 kg area 22 m^2^
+
+Mean highway speed is 100 km/hr 
+
+40% of cars are A, 40% of cars are B and 20% are C
+
+```{r sampling, eval=TRUE, echo=TRUE}
+
+
+# generate a structure to store info on our possible cars
+possible_cars = data.frame(name = c("A","B","C"),mass=c(31000,45000,38000), area = c(25,30,22))
+
+# first look at how results vary for mean speed say 100km/hr
+# do conversion
+speed_base = 100 * 0.28
+
+# because I have one mass and area for each car and only 1 speed
+# I can estimate power for each car type
+# add to the data structure
+possible_cars$power = autopower(V=speed_base, A = possible_cars$area, m=possible_cars$area)
+
+head(possible_cars)
+
+# show results                         
+ggplot(possible_cars, aes(x=mass, y=power, fill=area))+geom_col()+labs(y="Power W", x="Mass (kg)")
+
+```
+
+# Building our highway
+
+What could be the total power consummed if there are 100 cars on this highway each hour,
+they are not all travelling at 100km/hr - but that is the average (and speeds tend to
+be normally distributed)
+
+
+How could we take into account probbility of a given car? AND distribution of speeds?
+
+
+We will use sample here
+
+```{r sampling2}
+
+# what is I want to estimate average power use given different probabilities of particular cars
+
+# define probablity, must sum to 1 ?
+# why
+possible_cars$prob = c(0.4, 0.4, 0.2)
+
+possible_cars
+
+# use sample to generate test cases
+# first generate our data structure
+# assume log normal distribution of speeds with mean 100km/hr
+# recall our function needs spped in m/s not km/hr
+
+nsample = 100
+mean_speed = log(100*0.277)
+
+speeds = rlnorm(mean=mean_speed, sd=0.1*mean_speed, nsample)
+summary(speeds)
+
+plot(density(speeds), ylab="Distribution of Speeds in (m/s)")
+
+
+# create a new data frame to store results from sampling
+results = data.frame(speed=speeds, power=NA)
+
+
+# for each speed guess which car
+# use sample
+# why base?
+# give each car type an id
+
+possible_cars$row = seq(from=1, to=nrow(possible_cars))
+whichcar = base::sample(possible_cars$row, size=nsample, prob=possible_cars$prob, replace=TRUE)
+
+# what is whichcar?
+head(whichcar)
+possible_cars[whichcar,]
+
+
+# add a car to the our data structure that contains speeds
+results$mass = possible_cars$mass[whichcar]
+
+head(results)
+
+#  add the area
+results$area = possible_cars$area[whichcar]
+
+# now lets get power for all of our samples of speed and car type
+results$power = autopower(A=results$area, V=results$speed, m=results$mass)
+
+summary(results$power)
+ggplot(results,aes(x="", y=power/1000))+geom_boxplot(fill="red")+labs("Power kW")
+
+
+# try adding an additional car type - with mass 30000 and area 10
+
+# what if we use more samples (200); how do estimates of mean power change
+
+
+                                  
+```
+ 
+ 
+# Exploring multiple dimensions at once
+
+We might also want to compute for a range of drag coefficients
+
+Say for 0.1 to 0.4 in steps
+
+This gets a bit more complicated - what if we want to look at our samples of different cars for EACH drag coefficient
+
+# Loops
+
+Available in all progamming language
+A type of "flow control" - flow from on instruction to the next
+
+* For
+* While
+* If/else
+
+In R, *apply* family often replaces loops (although traditional loops also available)
+
+# Use sapply
+
+
+We also take advantage of a *sapply* function definition that allows use to run multiple steps for each value in the sequence
+
+Syntax is
+sapply(sequence, function, parameters)  
+
+OR to define a couple of steps on the fly
+
+sapply(sequence, function(parms) {definition})
+
+See example below
+
+```{r sampling3}
+
+# create a sequence of drag efficienies
+cdrag = seq(from=0.3, to=0.5, by=0.05)
+length(cdrag)
+
+
+# use sapply to run for each value of cdrag, for car with area=50, mass=2000 and speed 80m/s
+sapply(cdrag, autopower, A=50, V=80, m=2000)
+cdrag
+
+
+# now lets do this for our highway
+View(results)
+res = sapply(cdrag,  autopower, A=results$area, V=results$speed, m=results$mass)
+
+# we needed a new data structure
+# can you guess what is in this data structure - what are columns and what are rows
+head(res)
+
+
+
+# rearrange to plot - common way to get data into a form that works with ggplot
+colnames(res)=cdrag
+resl=as.data.frame(res) %>%
+  gather(cdrag, power) %>% 
+  mutate(mean_speed = rep(100, length(res)))
+results_100 <- ggplot(resl, aes(cdrag, power, fill=cdrag))+geom_boxplot() + labs(y="Rangoe of Power (W/s", "Drag Coefficient")
+
+# what if we design new highways that have lower rolling coefficients 
+#  we can reduce the rolling coefficient by 50%
+# or we can reduce the mean speed to 80 km/h (still with 10% standard deviation)
+# calculate mean power for both (assuming the same car probabilities above)
+# which is better
+
+
+      
+```
+# In-Class Activity
+Reduce the mean speed to (80 km/hr) and compare to the 100 km/hr results  
+
+```{r inclass}
+#Reduce mean speed to 80
+mean_speed_low = log(80*0.277)
+speeds_low = rlnorm(mean=mean_speed_low, sd=0.1*mean_speed, nsample)
+
+results_low = data.frame(speed=speeds_low, power=NA)
+
+possible_cars$row = seq(from=1, to=nrow(possible_cars))
+whichcar = base::sample(possible_cars$row, size=nsample, prob=possible_cars$prob, replace=TRUE)
+
+# add a car to the our data structure that contains speeds
+results_low$mass = possible_cars$mass[whichcar]
+
+#  add the area
+results_low$area = possible_cars$area[whichcar]
+
+# now lets get power for all of our samples of speed and car type
+results_low$power = autopower(A=results$area, V=results$speed, m=results$mass)
+
+# create a sequence of drag efficienies
+cdrag = seq(from=0.3, to=0.5, by=0.05)
+
+#Apply over the cdrag results:
+res_low = sapply(cdrag,  autopower, A=results_low$area, V=results_low$speed, m=results_low$mass)
+
+# rearrange to plot - common way to get data into a form that works with ggplot
+colnames(res_low)=cdrag
+resl_low=as.data.frame(res_low) %>% 
+  gather(cdrag, power) %>%
+  mutate(mean_speed = rep(80, length(res_low)))
+
+results_80 <- ggplot(resl_low, aes(cdrag, power, fill=cdrag))+geom_boxplot() + labs(y="Rangoe of Power (W/s", "Drag Coefficient")
+
+
+#compare graphs:
+results_80
+results_100
+
+
+##Combine results to compare on one graph:
+combined_result <- rbind(resl, resl_low)
+
+#Graph one:
+results_combine <- ggplot(combined_result, aes(cdrag, power, fill=cdrag)) + geom_boxplot() + facet_wrap(~mean_speed)
+results_combine
+```
+
+
+
+# What we've learned so far
+
+* how to make a function
+* how to generate data for a function
+  * by sampling from know distributions (e.g normal)
+  * sampling from a sequence with assigned probablities
+* how to repeat our function for multiple parameter values
+* how to create data structures to store the output of multiple uses of the function
+
+
+#  <span style="color:blue"> A bit more on Looping <\span>
+
+Loops - similar to apply but more general
+
+```{r loop }
+
+# repeat statement
+a=0
+for (i in 1:5) {
+ a = a+i
+}
+a
+
+# find the maximum speed
+speeds = runif(min=0, max=100, n=300)
+
+maxspeed=0
+for ( i  in 1:length(speeds)) {
+  maxspeed = ifelse(speeds[i] > maxspeed, speeds[i], maxspeed)
+}
+
+maxspeed
+max(speeds)
+
+head(results)
+
+# apply's are R's internal loops - FAST
+# by column
+results_means = apply(results, 2, mean)
+# by row
+silly = apply(results,1,mean)
+
+# make a for loop to compute results_means
+```
+
+# Loops can be "nested" on loop in side the other
+
+Exampe: Calculate NPV or a range of different interest rates and a range of damages that may be incurred 10 years in the future
+
+Steps
+
+* define inputs (interest rates, damages)
+* define output (NPV)
+* write the function
+* create a data structure to store results where we vary both interest rates and damages
+* use nested for loops to fill in the data structure
+
+Try it first...
+
+
+```{r npvfor, echo=FALSE}
+
+# write a function to compute npv
+source("../../src/dataf/R/compute_NPV.R")
+compute_NPV(20, discount=0.01, time=20)
+
+
+#generate some input
+damages = c(25,33,91,24)
+# sensitivity to discount rate
+discount_rates = seq(from=0.01, to=0.04, by=0.005)
+yr=10
+
+# compute some npv's for different discount rates
+# first generate a dataframe to store results
+npvs = as.data.frame(matrix(nrow=length(damages), ncol=length(discount_rates)))
+
+# now use a for loop to populate
+ for (i in 1:length(damages)) {
+         for (j in 1:length(discount_rates)) {
+       npvs[i,j]= compute_NPV(value=damages[i],       discount=discount_rates[j],time=yr )
+
+         }
+ }
+ npvs
+ 
+ 
+ #some data wrangling
+colnames(npvs)=discount_rates
+rownames(npvs)=damages
+ npvs
+ 
+
+ npvs = gather(npvs, 1:7, key=dis, value=npv)
+ head(npvs)
+ ggplot(npvs, aes(x=npv, col=as.factor(dis)))+geom_density(size=2)+scale_color_brewer(type="seq", name="Discount")
+ 
+ # how about summing all the damages
+ npv.total =npvs %>% group_by(dis) %>% summarize(t=sum(npv))
+ ggplot(npv.total, aes(dis,t, fill=dis))+geom_col() + labs(x="Discount Rate", y="Total ($)")
+
+ 
+```
+
+# Some other types of loops
+
+* while
+  useful for repeating until a condition is met
+
+Example
+if a metal toxin in a lake increases by 1% per year, how many years will it take for the metal level to be greater than 30 units, if toxin is current at 5 units
+
+
+```{r} 
+
+# accumulate pollutant until a threshold - how many years does it take
+
+# initial conditions
+yr=1
+pollutant_level = 5
+
+# loop
+while (pollutant_level < 30)   {
+  # increase pollutant
+pollutant_level = pollutant_level + 0.01* pollutant_level 
+# keep track of time
+yr = yr + 1
+}
+
+pollutant_level
+yr
+
+# while loop dangers
+
+```
+
+# <span style="color:blue"> Data types 
+
+All programing languages use data-types, or structures to hold information
+
+* integer
+* floating point/ real / numeric
+* character 
+* string
+
+Often data types are multi-dimensional 
+Some useful ones in R
+
+* vector
+* matrix
+* data frame
+* tibble
+* factors
+* lists
+
+Programming often involves selecting and building data structures. Like the **res** matrix we built last class to hold the results from our **for** loop
+
+Good data structures are
+
+* as simple as possible
+* easy to understand (readable names)
+* easy to manipulate 
+* easy to visualize
+
+# <span style="color:blue"> Factors \span
+
+something that has different **classes** or **groups**
+useful for doing calculations with categories
+
+Here's an example:
+
+First lets look at a standard numeric vector
+
+```{r} 
+a = c(1.3, 1, 4, 1.3, 22)
+# compute the mean
+mean(a)
+```
+
+What if **a** is a factor
+
+What do commands like **mean** do
+```{r} 
+a = as.factor(a)
+# compute the mean
+mean(a)
+
+#why? lets look
+a
+
+
+
+
+```
+
+We can use **summary** with factors to get frequencies in each category (or “level” )
+
+
+
+```{r fishes}
+
+# create vector of possible fish 
+possible.fish = c("salmon","steelhead","shark","tuna","cod")
+
+# we can use sample to simulate a random recording of catch by fisherman, lets say we pick 20 fish from the net
+
+catch1 = sample(possible.fish, size=20, replace=T)
+# because possible.fish was a factor catch1 will be a factor
+catch1
+
+summary(catch1)
+# if we want summary to be more useful - make this a factor
+catch1 = as.factor(catch1)
+
+
+# to quickly get frequencies of different fish and to plot 
+summary(catch1)
+plot(catch1, col="blue")
+
+
+# we can also use summary to explore and return information about the distribution
+# mean frequency of a particular type of fish
+mean(summary(catch1))
+
+# maximum frequency
+max(summary(catch1))
+
+# which fish was most frequently caught
+which.max(summary(catch1))
+
+#to get just the name 
+names(which.max(summary(catch1)))
+
+# use results for creating text
+# sprintf creates a string %s mean use what ever is after the , to fill in a string
+plottitle=sprintf("We like %s", names(which.max(summary(catch1))))
+
+plot(catch1, col="blue", main=plottitle)
+
+# you can also add numbers to the string
+plottitle=sprintf("We mostly caught %s \n max catch(%d)", names(which.max(summary(catch1))), max(summary(catch1)))
+plot(catch1, col="blue", main=plottitle)
+
+#How do you figure out the rarest fish in our simulated ocean
+
+# bigger challenge how would use pre-assign probabilities to different fish and then generate your ocean, hint look at help page for sample
+```
+
+# Aside **sprintf**
+
+some useful syntax if you want to generate strings
+
+* **%s** replace with a string
+* **%d** replace with an integer value
+* **%f** replace with a real value
+* **%4.1f** replace with a real value with 4 digist, two after decimal
+* **\n** add a line return
+
+Try it
+
+make a string with **sprintf** and add to plot title
+
+
+# <span style="color:blue"> Functions with factors 
+
+Lets generate a function that makes use of categorical data
+species diversity is a good example
+
+"Simpson's Index (D) measures the probability that two individuals randomly selected from a sample will belong to the same species 
+
+Value is between 0 and 1, with lower values associated with *lower* diversity
+
+See 
+[Simpson Biodiversity](http://www.countrysideinfo.co.uk/simpsons.htm)
+
+
+```{r diversity, echo=TRUE}
+
+source("../../src/dataf/R/compute_simpson_index.R")
+compute_simpson_index
+
+
+possible.fish = as.factor(c("salmon","steelhead","shark","tuna","cod"))
+# simulate a random recording of catch by fisherman
+
+
+# note here is answer to above challenge
+catch1 = sample(possible.fish, size=10, prob = c(0.2, 0.2, 0.1, 0.1, 0.4), replace=T)
+# lets create a test case that should have low diversity, by repeating the same thing
+catch2 = c(rep("salmon", times=10), rep("cod", times=10))
+
+compute_simpson_index(catch1)
+compute_simpson_index(catch2)
+
+```
+
+What would be a useful error check here!
+
+Repeat for the alternative Simpson Diversity Index
+Test on the **fish.txt** 
+
+Divide by zero - one of the most common errors! 
+
+Sometimes you don't want factors and R thinks something should be
+How to change back? **as.numeric** makes sense ...but
+
+
+
+```{r, echo=TRUE}
+
+a = as.factor(c(1.3, 1, 4, 1.3, 22))
+#sum(a)
+
+# try to make a numeric version from the factor
+b = as.numeric(a)
+sum(b)
+b
+
+# better
+b = as.character(a)
+b = as.numeric(b)
+b
+sum(b)
+```
+
+#  <span style="color:blue"> Returning multiple things from a function \span
+
+In R, to do this we use LISTS
+
+* Lists are the most “informal” data structures in R
+* List are really useful for keeping track of and organizing groups of things that are not all the same
+* A list could be a table where number of rows is different for each column
+* A list can have numeric, character, factors all mixed together
+* List are often used for returning more complex information from function (e.g. lm)
+
+```{r introlist, echo=TRUE}
+
+# make a list
+sale = list(id=2, quality="high", contents=c("apple","cherry"), cost=c(4,5))
+sale
+
+#ways to access elements
+sale$id
+sale$what
+
+# you can also access by list item number
+# the [x] denotes the xth item in the list
+sale[[3]]
+sale[["contents"]]
+
+
+# how do you get the second element in the vector that has the contents
+# there are two ways
+
+
+# add to a list
+sale$location = "Farmers market"
+sale
+# or remove
+sale$location = NULL
+sale
+
+# some tricky things
+# correct accessing items in list
+sale$cost
+sale[[4]]
+
+# works but
+#sale[4]
+
+
+sum(sale$cost)
+sum(sale[[4]])
+
+```
+
+# So why use these complex data types?
+
+R functions return *lists* and useful when you don't know how many rows you will need in a data frame or matrix
+
+consider *lm*
+
+
+```{r lmlist, echo=TRUE}
+
+# read in some streamflow data
+sage = read.table("../../src/dataf/data/sagedata.txt", header=T)
+names(sage)
+
+# sum to water year
+sage_wy = sage %>% group_by(wy) %>% summarize(tavg=mean(tavg), precip=sum(precip), trans=sum(trans), psn=sum(psn))
+
+# regress photosynthesis (psn) against precip
+res = lm(psn~precip+wy, data=sage_wy)
+summary(res)
+
+#lm returns a list so we can look at the different elements
+
+res$coefficients
+res[["coefficients"]]
+res[["call"]]
+
+
+
+```
+
+# Using lists to return multiple items from a function
+
+We can use *lists* to return multiple,diverse pieces of information from our functions
+Lets start with diversity - many be want to know a bit more about the dataset
+
+* Simpson diversity
+* most frequent species
+* number of distinct species
+
+
+
+```{r diversitylist, echo=TRUE}
+
+# repeat with a list
+source("../../src/dataf/R/computediversity.R")
+
+computediversity
+
+computediversity(catch1)
+computediversity(catch2)
+```
+
+In class: Try adding to your diversity function: return the rarest species; 
+
+
+ 
+ We can also use parameters to determine flow control in a function
+ 
+ 
+```{r str, echo=FALSE}
+
+source("../../src/dataf/R/compute_season_meanflow.R")
+
+str = read.table("../src/dataf/data/str.txt", header=T)
+compute_season_flow(str)
+
+compute_season_flow(str, kind="max")
+```
+
+What you've learned
+
+* common data types
+* common flow control approaches
+* returning multiple items from a function
+
+
+
