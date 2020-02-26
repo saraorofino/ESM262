@@ -1,0 +1,25 @@
+---
+title: "ESM 262 Assignment 2"
+author: "Sara Orofino"
+date: "2/26/2020"
+output: html_document
+---
+
+#{.tabset}
+
+##Load Packages
+
+
+##Function
+ 
+
+##Data
+Generate the input data for the function  
+
+Inputs:  
+ * prices for different fish  
+ * number of each fish species caught by location  
+
+##Graph Output
+
+Graph of revenue by location and total revenue (text)  
