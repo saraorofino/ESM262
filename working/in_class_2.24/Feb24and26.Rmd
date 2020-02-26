@@ -353,7 +353,13 @@ results_means = apply(results, 2, mean)
 # by row
 silly = apply(results,1,mean)
 
-# make a for loop to compute results_means
+# make a for loop to compute results_means  
+sum_speed = 0
+for(i in 1:length(speeds)){
+  sum_speed = sum_speed + speeds[i]
+}
+meanspeed = sum_speed/length(speeds)
+mean(speeds)
 ```
 
 # Loops can be "nested" on loop in side the other
@@ -375,6 +381,13 @@ Try it first...
 
 # write a function to compute npv
 source("../../src/dataf/R/compute_NPV.R")
+
+#Function for NPV:
+compute_NPV = function(value, time, discount){
+  result = value / (1 + discount)**time
+  return(result)
+}
+
 compute_NPV(20, discount=0.01, time=20)
 
 
@@ -386,33 +399,62 @@ yr=10
 
 # compute some npv's for different discount rates
 # first generate a dataframe to store results
-npvs = as.data.frame(matrix(nrow=length(damages), ncol=length(discount_rates)))
+npvs = as.data.frame(matrix(nrow=length(damages), ncol=(length(discount_rates))))
 
 # now use a for loop to populate
  for (i in 1:length(damages)) {
          for (j in 1:length(discount_rates)) {
-       npvs[i,j]= compute_NPV(value=damages[i],       discount=discount_rates[j],time=yr )
+       npvs[i,j]= compute_NPV(value=damages[i], discount=discount_rates[j],time=yr )
 
          }
  }
- npvs
- 
- 
- #some data wrangling
+npvs
+
+#some data wrangling
 colnames(npvs)=discount_rates
 rownames(npvs)=damages
- npvs
+npvs
  
 
- npvs = gather(npvs, 1:7, key=dis, value=npv)
- head(npvs)
- ggplot(npvs, aes(x=npv, col=as.factor(dis)))+geom_density(size=2)+scale_color_brewer(type="seq", name="Discount")
+npvs_edit = gather(npvs, 1:7, key=dis, value=npv)
+head(npvs)
+ggplot(npvs_edit, aes(x=npv, col=as.factor(dis)))+geom_density(size=2)+scale_color_brewer(type="seq", name="Discount")
  
  # how about summing all the damages
- npv.total =npvs %>% group_by(dis) %>% summarize(t=sum(npv))
+ npv.total =npvs_edit %>% group_by(dis) %>% summarize(t=sum(npv))
  ggplot(npv.total, aes(dis,t, fill=dis))+geom_col() + labs(x="Discount Rate", y="Total ($)")
 
- 
+  
+# try use the NPV loop with a loop of times as well:
+yr = c(10,15,20) #set three years
+discount_rates = rep(seq(from=0.01, to=0.04, by=0.005),3) #repeat discount rates three times
+npvs = as.data.frame(matrix(nrow=length(damages), ncol=(length(discount_rates))))
+
+for(i in 1:length(damages)){
+  for(j in 1:length(discount_rates)){
+    for(y in 1:length(yr)){
+      npvs[i,j] = compute_NPV(value= damages[i], discount=discount_rates[j], time=yr[y])
+    }
+  }
+} 
+
+#try this loop with a list:
+# create the list of inputs
+npv = list(
+  damages = c(25,33,91,24),
+  discount_rates = seq(from=0.01, to=0.04, by=0.005),
+  yr = c(10,15,20)
+)
+# cross all the lists to get every combination of damage, discount, and yr
+npv_input = npv %>% cross()
+
+results = list()
+
+for(i in 1:84){
+  results[[i]] = compute_NPV(value=npv_input[[i]]$damages, discount=npv_input[[i]]$discount_rates,
+                             time=npv_input[[i]]$yr)
+}
+results_npv <- as.data.frame(unlist(results))
 ```
 
 # Some other types of loops
