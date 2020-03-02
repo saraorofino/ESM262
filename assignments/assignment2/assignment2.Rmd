@@ -8,6 +8,9 @@ output: html_document
 #{.tabset}
 
 ##Load Packages
+```{r packages}
+library(tidyverse)
+```
 
 
 ##Function
@@ -28,7 +31,7 @@ possible_fish <- c("cod", "tuna", "halibut", "salmon", "bass", "grouper", "rockf
 prices <- runif(length(possible_fish),3,30)
 
 #Create the input table of fish and prices:
-fish_prices <- data.frame(fish = possible_fish, price = prices)
+fish.prices <- data.frame(fish = possible_fish, price = prices)
 
 #Create a vector of locations:
 places <- c("Alaska", "California", "Mexico", "North Carolina", "Maine")
@@ -49,16 +52,13 @@ for(i in 1:length(catch_list)){
 catch <- bind_rows(catch_all)
 colnames(catch) <- c("location", "fish", "catch")
 
-test1 <- subset(catch, location == "Alaska")
-test1_max <- test1$fish[which.max(test1$catch)]
+```
 
-for(i in 1:7){
-  fish <- test1$fish[i]
-  fish.price <- fish_prices$price[fish_prices$fish == fish]
-  test1$price[i] <- fish.price
-}
+##Run Function
+```{r run-function}
+source("fish_revenue.R")
 
-
+fish_results <- fish_revenue(fish_data = catch, fish_prices = fish.prices)
 ```
 
 
