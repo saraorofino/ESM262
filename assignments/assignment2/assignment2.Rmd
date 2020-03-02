@@ -8,9 +8,16 @@ output: html_document
 #{.tabset}
 
 ##Load Packages
-
+```{r load packages}
+library(tidyverse) #load the tidyverse
+library(here) #load the here() library to source function. the here() library should capture your local filepath up to the point where the repo begins and is downloaded from github. 
+```
 
 ##Function
+```{r load function}
+source(here(),"assignments/assignment2/fish_revenue.R", local = FALSE, echo = FALSE) #here() should get your local filepath all the way to "ESM262", and the rest gets you to the function script
+fish_revenue
+```
  
 
 ##Data
@@ -20,7 +27,10 @@ Inputs:
  * prices for different fish  
  * number of each fish species caught by location  
  
-```{r data, warning=FALSE}
+```{r create data, warning=FALSE}
+
+#creating the data table with prices of each fish
+
 #Create a vector of possible fish
 possible_fish <- c("cod", "tuna", "halibut", "salmon", "bass", "grouper", "rockfish")  
 
@@ -30,10 +40,15 @@ prices <- runif(length(possible_fish),3,30)
 #Create the input table of fish and prices:
 fish_prices <- data.frame(fish = possible_fish, price = prices)
 
+fish_prices #this is the input data frame for fish prices
+
+#now, creating the data table for total fish caught for each species at different locations, with each location being a column and each fish a row
+
 #Create a vector of locations:
 places <- c("Alaska", "California", "Mexico", "North Carolina", "Maine")
 
 #Create the second input table - number of fish species caught in each location
+
 #I would like to have all the possible fish for every location, start with a list and then cross to get all combinations
 catch_list <- list(location = places, fish = possible_fish) %>% cross()
 
@@ -41,7 +56,7 @@ catch_list <- list(location = places, fish = possible_fish) %>% cross()
 catch_all <- list() #empty list to store for loop results
 for(i in 1:length(catch_list)){
   dat <- as.data.frame(matrix(unlist(catch_list[i]), ncol = 2)) #take the first combination from the list, keep 2 columns
-  dat$catch <- rnorm(1,mean=300000,sd=10000) #draw the catch from a normal distribution
+  dat$catch <- rnorm(1,mean=300000,sd=50000) #draw the catch from a normal distribution
   catch_all[[i]] <- dat #save it as a list in the catch_all
 }
 
@@ -49,8 +64,11 @@ for(i in 1:length(catch_list)){
 catch <- bind_rows(catch_all)
 colnames(catch) <- c("location", "fish", "catch")
 
-test1 <- subset(catch, location == "Alaska")
-test1_max <- test1$fish[which.max(test1$catch)]
+#now, spread the data to make each location a column and each row a fish
+
+catch <- spread(catch, location, catch)
+
+catch #the input data frame for fish catch
 
 for(i in 1:7){
   fish <- test1$fish[i]
