@@ -15,6 +15,63 @@ library(tidyverse)
 
 ##Function
  
+Old function just in case:  
+```{r}
+#only want results for the number of unique locations (not entire length of input data)
+  unique_loc <- unique(fish_data$location)
+  
+  #Set up a results dataframe for the location dependent information
+  results <- data.frame(location = rep(NA, length(unique_loc)),
+                        common_fish = rep(NA, length(unique_loc)),
+                        total_rev = rep(NA, length(unique_loc)))
+  
+  #Fishery results should be based on the number of unique fisheries
+  unique_fish <- unique(fish_data$fish)
+  
+  #Set up a dataframe for the fishery dependent information
+  fish.results = data.frame(fishery = rep(NA, length(unique_fish)),
+                            fishery_rev = rep(NA, length(unique_fish)))
+  
+  #Want to have the fish data as a factor:
+  fish_data$fish = as.factor(fish_data$fish)
+  
+  #Compute all the location depedent results:
+  for(i in 1:length(unique_loc)){
+    
+    results$location[i] <- unique_loc[i] #set the location
+    
+    #Subset by location to find which fish had the highest catch for each location
+    location_name <- results$location[i]
+    sub_location <- subset(fish_data, location == location_name)
+    sub_max <- names(which.max(summary(sub_location$fish)))
+    results$common_fish[i] <- sub_max
+    
+    #Calculate the revenue for each location - add a price column to the subsetted data, find price for each fish & calc revenue
+    for(j in 1:7){
+    fish.name <- sub_location$fish[j]
+    fish.price <- fish_prices$price[fish_prices$fish == fish.name]
+    sub_location$fish_price[j] <- fish.price
+    fish.catch <- summary(sub_location$fish)[j]
+    sub_location$revenue[j] <- fish.price * fish.catch
+    }
+
+    total_rev <- sum(sub_location$revenue)
+    results$total_rev[i] <- total_rev
+  }
+  
+  #Compute the fishery dependent results
+  for(f in 1:length(unique_fish)){
+    fish.results$fishery <- unique_fish[f] #set the fishery
+    fishname <- fish.results$fishery[f]
+    sub_fishery <- subset(fish_data, fish == fishname)
+    fishprice <- fish_prices$price[fish_prices$fish == fishname]
+    fishcatch <- summary(sub_fishery$fish)[f]
+    sub_fishery$fishrev[f] <- fishprice * fishcatch
+    
+    fish.results$fishery_rev[f] <- sub_fishery$fishrev[f]
+  }
+  
+```
 
 ##Data
 Generate the input data for the function  
@@ -33,20 +90,22 @@ prices <- runif(length(possible_fish),3,30)
 #Create the input table of fish and prices:
 fish.prices <- data.frame(fish = possible_fish, price = prices)
 
-#Randomly draw 200 fish at each of the five locations:
-catch = data.frame(Alaska = rep(NA,200), California = rep(NA, 200), Mexico = rep(NA, 200),
-                   Maine = rep(NA, 200), North_Carolina = rep(NA, 200))
+#Set up the dataframe for catch at each of the 5 locations:
+catch = data.frame(Alaska = rep(NA,length(possible_fish)), California = rep(NA, length(possible_fish)),
+                   Mexico = rep(NA, length(possible_fish)),
+                   Maine = rep(NA, length(possible_fish)), North_Carolina = rep(NA, length(possible_fish)))
 
-for(i in 1:200){
-  catch$Alaska[i] <- sample(possible_fish, size=1,replace=T)
-  catch$California[i] <- sample(possible_fish, size=1, replace=T)
-  catch$Mexico[i] <- sample(possible_fish, size=1, replace=T)
-  catch$Maine[i] <- sample(possible_fish, size=1, replace=T)
-  catch$North_Carolina[i] <- sample(possible_fish, size=1, replace=T)
+#Let's say catch will vary from 10 fish to 200 fish; draw number of each fish caught at each location:
+for(i in 1:length(possible_fish)){
+  catch$Alaska[i] <- round(runif(1,10,200),0)
+  catch$California[i] <- round(runif(1,10,200),0)
+  catch$Mexico[i] <- round(runif(1,10,200),0)
+  catch$Maine[i] <- round(runif(1,10,200),0)
+  catch$North_Carolina[i] <- round(runif(1,10,200),0)
 }
 
-##To - Do: make a df that has one column for each location with the fish species as rows and the number of each fish caught at each location as the column values
-
+#Add fish types as row names
+rownames(catch) <- possible_fish
 ```
 
 ##Run Function

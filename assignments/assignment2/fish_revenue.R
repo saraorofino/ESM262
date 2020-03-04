@@ -14,28 +14,23 @@
 
 fish_revenue <- function(fish_data, fish_prices){
   
-  #only want results for the number of unique locations (not entire length of input data)
-  unique_loc <- unique(fish_data$location)
   
   #Set up a results dataframe for the location dependent information
-  results <- data.frame(location = rep(NA, length(unique_loc)),
-                        common_fish = rep(NA, length(unique_loc)),
-                        total_rev = rep(NA, length(unique_loc)))
-  
-  #Fishery results should be based on the number of unique fisheries
-  unique_fish <- unique(fish_data$fish)
+  results <- data.frame(location = rep(NA, ncol(fish_data)),
+                        common_fish = rep(NA, ncol(fish_data)),
+                        total_rev = rep(NA, ncol(fish_data)))
   
   #Set up a dataframe for the fishery dependent information
-  fish.results = data.frame(fishery = rep(NA, length(unique_fish)),
-                            fishery_rev = rep(NA, length(unique_fish)))
+  fish.results = data.frame(fishery = rep(NA, nrow(fish_data)),
+                            fishery_rev = rep(NA, nrow(fish_data)))
   
   #Want to have the fish data as a factor:
   fish_data$fish = as.factor(fish_data$fish)
   
   #Compute all the location depedent results:
-  for(i in 1:length(unique_loc)){
+  for(i in 1:ncol(fish_data)){
     
-    results$location[i] <- unique_loc[i] #set the location
+    results$location[i] <- ncol(fish_data)[i] #set the location
     
     #Subset by location to find which fish had the highest catch for each location
     location_name <- results$location[i]
