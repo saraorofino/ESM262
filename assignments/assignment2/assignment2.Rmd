@@ -15,7 +15,7 @@ library(tidyverse)
 
 ##Function
  
-Old function just in case:  
+Old function just in case I need to refer to it:
 ```{r}
 #only want results for the number of unique locations (not entire length of input data)
   unique_loc <- unique(fish_data$location)
