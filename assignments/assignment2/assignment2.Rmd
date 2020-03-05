@@ -68,11 +68,23 @@ colnames(catch) <- c("location", "fish", "catch")
 
 catch <- spread(catch, location, catch)
 
-rownames(catch) <- catch[,1]
+catch #the input data frame for fish catch
+```
 
-catch <- catch %>% 
-  select("Alaska", "California", "Maine", "Mexico", "North Carolina")
+Trying a different catch dataframe:
+```{r}
+catch_data <- data.frame("Alaska" = rep(NA, 7), "California" = rep(NA, 7), "Mexico" = rep(NA, 7), "North_Carolina" = rep(NA, 7),
+                    "Maine" = rep(NA, 7))
 
+for(i in 1:7){
+  catch_data$Alaska[i] <- round(runif(1, 10,200), 0)
+  catch_data$California[i] <- round(runif(1, 10,200), 0)
+  catch_data$Mexico[i] <- round(runif(1, 10,200), 0)
+  catch_data$North_Carolina[i] <- round(runif(1, 10,200), 0)
+  catch_data$Maine[i] <- round(runif(1, 10,200), 0)
+}
+
+rownames(catch_data) <- possible_fish
 ```
 
 
