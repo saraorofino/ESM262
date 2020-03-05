@@ -68,14 +68,10 @@ colnames(catch) <- c("location", "fish", "catch")
 
 catch <- spread(catch, location, catch)
 
-catch #the input data frame for fish catch
+rownames(catch) <- catch[,1]
 
-for(i in 1:7){
-  fish <- test1$fish[i]
-  fish.price <- fish_prices$price[fish_prices$fish == fish]
-  test1$price[i] <- fish.price
-}
-
+catch <- catch %>% 
+  select("Alaska", "California", "Maine", "Mexico", "North Carolina")
 
 ```
 
