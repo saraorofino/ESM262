@@ -43,36 +43,6 @@ fish_prices <- data.frame(fish = possible_fish, price = prices)
 fish_prices #this is the input data frame for fish prices
 
 #now, creating the data table for total fish caught for each species at different locations, with each location being a column and each fish a row
-
-#Create a vector of locations:
-places <- c("Alaska", "California", "Mexico", "North Carolina", "Maine")
-
-#Create the second input table - number of fish species caught in each location
-
-#I would like to have all the possible fish for every location, start with a list and then cross to get all combinations
-catch_list <- list(location = places, fish = possible_fish) %>% cross()
-
-#For each of the combinations draw the catch and then add it to the results list
-catch_all <- list() #empty list to store for loop results
-for(i in 1:length(catch_list)){
-  dat <- as.data.frame(matrix(unlist(catch_list[i]), ncol = 2)) #take the first combination from the list, keep 2 columns
-  dat$catch <- rnorm(1,mean=300000,sd=50000) #draw the catch from a normal distribution
-  catch_all[[i]] <- dat #save it as a list in the catch_all
-}
-
-#Bind all the rows of the lists into one dataframe and update the column names
-catch <- bind_rows(catch_all)
-colnames(catch) <- c("location", "fish", "catch")
-
-#now, spread the data to make each location a column and each row a fish
-
-catch <- spread(catch, location, catch)
-
-catch #the input data frame for fish catch
-```
-
-Trying a different catch dataframe:
-```{r}
 catch_data <- data.frame("Alaska" = rep(NA, 7), "California" = rep(NA, 7), "Mexico" = rep(NA, 7), "North_Carolina" = rep(NA, 7),
                     "Maine" = rep(NA, 7))
 
