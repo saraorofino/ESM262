@@ -614,6 +614,10 @@ some useful syntax if you want to generate strings
 Try it
 
 make a string with **sprintf** and add to plot title
+```{r}
+plottitle = spritf("We caught %f fish", max(summary(catch1)))
+
+```
 
 
 # <span style="color:blue"> Functions with factors 
@@ -782,6 +786,38 @@ computediversity(catch2)
 ```
 
 In class: Try adding to your diversity function: return the rarest species; 
+```{r}
+#Diversity function:
+computediversity = function(species) {
+
+species = as.factor(species)
+
+# use simple simpson form
+tmp = (summary(species)/sum(summary(species))) ** 2
+diversity = 1.0-sum(tmp)
+
+# number of species
+nspecies = length(summary(species))
+
+# which is the most frequent
+tmp = which.max(summary(species))
+dominant = names(summary(species)[tmp])
+
+#which is the most rare:
+species_min <- which.min(summary(species))
+rare <- names(summary(species)[species_min])
+
+# output from function
+return(list(num=nspecies, simpson=diversity, dominant=dominant, rare=rare))
+}
+
+#Use flower data to test the function:
+library(here)
+flowers <- read.table(file = file.path(here(), "working/in_class_data/flowers.txt"))
+
+#Test function
+flower_diversity <- computediversity(species = flowers$V1)
+```
 
 
  
