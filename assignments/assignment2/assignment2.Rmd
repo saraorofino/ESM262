@@ -15,7 +15,7 @@ library(here) #load the here() library to source function. the here() library sh
 
 ##Function
 ```{r load function}
-source(here(),"assignments/assignment2/fish_revenue.R", local = FALSE, echo = FALSE) #here() should get your local filepath all the way to "ESM262", and the rest gets you to the function script
+source(here(),"assignments/assignment2/fish_revenue_edits.R", local = FALSE, echo = FALSE) #here() should get your local filepath all the way to "ESM262", and the rest gets you to the function script
 fish_revenue
 ```
  
@@ -38,6 +38,7 @@ possible_fish <- c("cod", "tuna", "halibut", "salmon", "bass", "grouper", "rockf
 prices <- runif(length(possible_fish),3,30)
 
 #Create the input table of fish and prices:
+#The input data frame needs to have the first column be the fish, and the second column be the prices
 fish_prices <- data.frame(fish = possible_fish, price = prices)
 
 fish_prices #this is the input data frame for fish prices
@@ -55,9 +56,16 @@ for(i in 1:7){
 }
 
 rownames(catch_data) <- possible_fish
+
+catch_data #this is the input data from for fish prices
+
+fish_results <- fish_revenue(catch_data = catch_data, price_data = fish_prices)
+
+fish_results
 ```
 
 
 ##Graph Output
 
 Graph of revenue by location and total revenue (text)  
+
