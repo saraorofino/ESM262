@@ -62,10 +62,18 @@ fish_revenue <- function(catch_data, price_data){
     #record the total fishery revenue at that location into the results data frame, for every location
     results$total_rev[i] <- rev
   }
+  
+  #calculate total fisheries revenue by summing location revenues, and create a vector to bind to the results dataset
+  total_fish_rev <- c("Total", "", sum(results$total_rev))
+  
+  #bind the total rev to the end of the results dataframe
+  results <- rbind(results, total_fish_rev)
+  
   #create column names for the results data frame
   result_colnames <- c("Location", "Most Frequent Fish", "Total Fisheries Revenue")
   #apply those column names
   colnames(results) <- result_colnames
+  
   #return the results
   return(results)
 }

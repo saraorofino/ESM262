@@ -59,9 +59,11 @@ rownames(catch_data) <- possible_fish
 
 catch_data #this is the input data from for fish prices
 
+#run the function
 fish_results <- fish_revenue(catch_data = catch_data, price_data = fish_prices)
 
 fish_results
+
 ```
 
 
