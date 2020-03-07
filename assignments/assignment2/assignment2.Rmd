@@ -8,7 +8,7 @@ output: html_document
 #{.tabset}
 
 ##Load Packages
-```{r load packages, message=F, warning=F}
+```{r load packages, message=FALSE, warning=FALSE}
 library(tidyverse) #load the tidyverse
 library(here) #load the here() package to source function 
 # Note: the here() library should capture your local filepath up to the point where the repo begins and is downloaded from github. 
