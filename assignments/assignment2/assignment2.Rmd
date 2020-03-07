@@ -1,6 +1,6 @@
 ---
 title: "ESM 262 Assignment 2"
-author: "Sara Orofino"
+author: "Chase Brewster & Sara Orofino"
 date: "2/26/2020"
 output: html_document
 ---
@@ -8,15 +8,17 @@ output: html_document
 #{.tabset}
 
 ##Load Packages
-```{r load packages}
+```{r load packages, message=F, warning=F}
 library(tidyverse) #load the tidyverse
-library(here) #load the here() library to source function. the here() library should capture your local filepath up to the point where the repo begins and is downloaded from github. 
+library(here) #load the here() package to source function 
+# Note: the here() library should capture your local filepath up to the point where the repo begins and is downloaded from github. 
 ```
 
 ##Function
 ```{r load function}
-source(here(),"assignments/assignment2/fish_revenue_edits.R", local = FALSE, echo = FALSE) #here() should get your local filepath all the way to "ESM262", and the rest gets you to the function script
-fish_revenue
+#Source the function, which is located in the same folder as this rmd:
+source("fish_revenue_edits.R", local = FALSE, echo = FALSE) 
+
 ```
  
 
@@ -27,26 +29,26 @@ Inputs:
  * prices for different fish  
  * number of each fish species caught by location  
  
-```{r create data, warning=FALSE}
+```{r create data, warning=F}
 
-#creating the data table with prices of each fish
-
+### Create the first input of prices for different fish:
 #Create a vector of possible fish
 possible_fish <- c("cod", "tuna", "halibut", "salmon", "bass", "grouper", "rockfish")  
 
 #Assign prices for the different fish - let's say prices vary from $3/lb to $30/lb
 prices <- runif(length(possible_fish),3,30)
 
-#Create the input table of fish and prices:
+#Combine to make the table:
 #The input data frame needs to have the first column be the fish, and the second column be the prices
 fish_prices <- data.frame(fish = possible_fish, price = prices)
 
-fish_prices #this is the input data frame for fish prices
+#fish_prices is the input data frame for fish prices (price_data in the function)
 
-#now, creating the data table for total fish caught for each species at different locations, with each location being a column and each fish a row
+### Creating the second input of total fish caught for each species at different locations
+#Each location should be a column 
 catch_data <- data.frame("Alaska" = rep(NA, 7), "California" = rep(NA, 7), "Mexico" = rep(NA, 7), "North_Carolina" = rep(NA, 7),
                     "Maine" = rep(NA, 7))
-
+#Each of the seven fish should be a different row:
 for(i in 1:7){
   catch_data$Alaska[i] <- round(runif(1, 10,200), 0)
   catch_data$California[i] <- round(runif(1, 10,200), 0)
@@ -55,19 +57,31 @@ for(i in 1:7){
   catch_data$Maine[i] <- round(runif(1, 10,200), 0)
 }
 
-rownames(catch_data) <- possible_fish
+rownames(catch_data) <- possible_fish #add the names of the fish to the rows
 
-catch_data #this is the input data from for fish prices
+#catch_data is the input data for catch by location (catch_data in the function)
+```
 
+
+```{r run-function}
 #run the function
-fish_results <- fish_revenue(catch_data = catch_data, price_data = fish_prices)
+fish_results <- fish_revenue(catch_data = catch_data, price_data = fish_prices, showplot = F)
 
-fish_results
-
+#view the revenue results, which are stored as the first list in the results:
+fish_results[[1]]
 ```
 
 
 ##Graph Output
 
-Graph of revenue by location and total revenue (text)  
+If the user specifies showplot = TRUE, the function will generate plot of fishery revenues by location with the total fishery revenue across all locations as a caption.  
+
+```{r function-plot}
+#run the function again with showplot = T
+fish_result2 <- fish_revenue(catch_data = catch_data, price_data = fish_prices, showplot = TRUE)
+
+#view the plot, which is stored as the second list in the results:
+fish_result2[[2]]
+```
+
 
